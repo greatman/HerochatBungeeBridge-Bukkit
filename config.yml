@@ -1,0 +1,6 @@
+#MySQL Details: (for nickname and muting support)
+host: localhost
+user: banana
+pass: orange
+database: fruit
+port: 3306
