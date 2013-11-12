@@ -16,6 +16,15 @@
       </plugin>
     </plugins>
     <finalName>HerochatBungeeBridgeBukkit</finalName>
+    <resources>
+    <resource>
+    <directory></directory>
+    <includes>
+    <include>plugin.yml</include>
+    <include>config.yml</include>
+    </includes>
+    </resource>
+    </resources>
   </build>
   <repositories>
   <repository>
