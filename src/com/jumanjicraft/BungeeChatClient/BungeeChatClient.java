@@ -45,7 +45,7 @@ public class BungeeChatClient extends JavaPlugin {
 			{
 				if (sc instanceof Player)
 				{
-					if (sc.hasPermission("BungeeChat.nickname"))
+					if (sc.hasPermission("BungeeChat.nickname") || sc.hasPermission("essentials.nick"))
 					{
 						setNickName((Player) sc, args[0]);
 					} else {
@@ -58,7 +58,7 @@ public class BungeeChatClient extends JavaPlugin {
 				Player player = Bukkit.getPlayer(args[0]);
 				if (player != null)
 				{
-					if (sc.hasPermission("BungeeChat.nickname.others"))
+					if (sc.hasPermission("BungeeChat.nickname.others") || sc.hasPermission("essentials.nick.others"))
 					{
 						setNickName(player, args[1]);
 					} else {
@@ -205,7 +205,7 @@ public class BungeeChatClient extends JavaPlugin {
 		} else {
 			if (nick.matches("^[a-zA-Z_0-9&]+$"))
 			{
-				if (nick.length() <= 16)
+				if (ChatColor.stripColor(nick).length() <= 16)
 				{
 					nick = ChatColor.translateAlternateColorCodes('&', nick);
 					if (!checkNickNameUsed(nick))
@@ -217,7 +217,7 @@ public class BungeeChatClient extends JavaPlugin {
 						player.sendMessage(ChatColor.RED+"That nickname is already used.");
 					}
 				} else {
-					player.sendMessage(ChatColor.RED+"That nickname is too long!");
+					player.sendMessage(ChatColor.RED+"That nickname is too long! Maximum length is 16 letters, does not include colours.");
 				}
 			} else {
 				player.sendMessage(ChatColor.RED+"Nicknames can only contain letters, numbers, colours (&) and underscores (_).");

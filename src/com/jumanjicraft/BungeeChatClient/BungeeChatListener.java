@@ -37,6 +37,7 @@ public class BungeeChatListener implements PluginMessageListener {
         	ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
         	String chatchannel = in.readUTF();
         	String message = in.readUTF();
+        	String server = in.readUTF();
         	message = ChatColor.translateAlternateColorCodes('&', message);
         	Channel channel = Herochat.getChannelManager().getChannel(chatchannel);
         	if (channel == null)
@@ -44,14 +45,7 @@ public class BungeeChatListener implements PluginMessageListener {
         		Bukkit.getLogger().warning("Channel "+chatchannel+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
 				return;
         	} 
-        	StringBuilder msg = new StringBuilder(channel.applyFormat(channel.getFormatSupplier().getAnnounceFormat(), "").replace("%2$s", message.replaceAll("(?i)&([a-fklmno0-9])", "\247$1")));
-        	if (channel.getFormat().startsWith("["))
-        	{
-        		msg.deleteCharAt(2);
-        		channel.sendRawMessage(ChatColor.GREEN+"[N"+ChatColor.RESET+msg);
-        	} else {
-        		channel.sendRawMessage(ChatColor.GREEN+"[N]"+ChatColor.RESET+msg);
-        	}
+        	channel.sendRawMessage(ChatColor.GREEN+"["+server+"]"+ChatColor.RESET+channel.applyFormat(channel.getFormatSupplier().getAnnounceFormat(), "").replace("%2$s", message.replaceAll("(?i)&([a-fklmno0-9])", "\247$1")));
         }
         
 }
