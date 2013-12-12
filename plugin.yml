@@ -3,26 +3,3 @@ version: 0.3
 author: KoolKrafter
 main: com.jumanjicraft.BungeeChatClient.BungeeChatClient
 depend: [Herochat, Vault]
-commands:
-  nickname:
-    description: Changes a player's nickname.
-    aliases: [nick]
-#  mute:
-#    description: Mutes a player.
-#  unmute:
-#    description: Unmutes a player.
-#  tempmute:
-#    description: Temp mutes a player.
-#  muted:
-#    description: Check how long you are muted for.
-#    aliases: [mutedfor]
-permissions:
-  BungeeChat.nickname:
-    description: Able to set your own nickname.
-    default: op
-  BungeeChat.nickname.others:
-    description: Able to set an other person's nickname.
-    default: op
-#  BungeeChat.mute:
-#    description: Able to use all mute commands.
-#    default: op
