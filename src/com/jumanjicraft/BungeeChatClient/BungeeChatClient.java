@@ -70,11 +70,8 @@ public class BungeeChatClient extends JavaPlugin {
     private class JedisPubSubHandler extends JedisPubSub {
         @Override
         public void onMessage(String channel, String message) {
-            System.out.println("CHECKING THE CHANNEL");
             if (channel.equals(CHANNEL_NAME_RECEIVE)) {
-                System.out.println("IT'S THE CHAN");
                 String[] messages = message.split(":", 5);
-                System.out.println("THE ARRAY:" + Arrays.toString(messages));
                 String server = messages[0];
                 if (!server.equals(getConfig().getString("serverName"))) {
                     String channelName = messages[1];
@@ -90,7 +87,6 @@ public class BungeeChatClient extends JavaPlugin {
                         Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
                         return;
                     }
-                    System.out.println("SENDING THE MSG");
                     herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
 
                 }
