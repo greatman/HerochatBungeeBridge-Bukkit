@@ -43,7 +43,7 @@ public class BungeeChatClient extends JavaPlugin {
 
     public void sendMessage(String channel, String prefix, String username, String message) {
         Jedis rsc = jedisPool.getResource();
-        rsc.publish(CHANNEL_NAME_SEND, channel + ":" + prefix + ":" + username + ":" + message);
+        rsc.publish(CHANNEL_NAME_SEND, getConfig().getString("serverName") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
     }
 
     private class PubSubListener implements Runnable {
@@ -73,23 +73,27 @@ public class BungeeChatClient extends JavaPlugin {
             System.out.println("CHECKING THE CHANNEL");
             if (channel.equals(CHANNEL_NAME_RECEIVE)) {
                 System.out.println("IT'S THE CHAN");
-                String[] messages = message.split(":", 4);
+                String[] messages = message.split(":", 5);
                 System.out.println("THE ARRAY:" + Arrays.toString(messages));
-                String channelName = messages[0];
-                String rank = messages[1];
-                String nickname = messages[2];
-                String playerMessage = messages[3];
-                playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
-                String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
-                String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
-                Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
-                if (herochatChannel == null)
-                {
-                    Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
-                    return;
+                String server = messages[0];
+                if (!server.equals(getConfig().getString("serverName"))) {
+                    String channelName = messages[1];
+                    String rank = messages[2];
+                    String nickname = messages[3];
+                    String playerMessage = messages[4];
+                    playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
+                    String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
+                    String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
+                    Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
+                    if (herochatChannel == null)
+                    {
+                        Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
+                        return;
+                    }
+                    System.out.println("SENDING THE MSG");
+                    herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
+
                 }
-                System.out.println("SENDING THE MSG");
-                herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
             }
         }
 
