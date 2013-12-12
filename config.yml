@@ -4,3 +4,4 @@ user: banana
 pass: orange
 database: fruit
 port: 3306
+jedisAddress: 127.0.0.1

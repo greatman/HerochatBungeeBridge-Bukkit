@@ -25,7 +25,7 @@ public class BungeeListener implements Listener {
 		{
 			if (!event.getFormat().equalsIgnoreCase(Herochat.getChannelManager().getConversationFormat()))
 			{
-				BungeeChatListener.TransmitChatMessage(ChatColor.RESET+event.getSender().getPlayer().getDisplayName()+event.getChannel().getColor()+": "+event.getMessage(), event.getChannel().getName());
+                plugin.sendMessage(event.getChannel().getName(), Herochat.getChatService().getPlayerPrefix(event.getSender().getPlayer()), event.getSender().getPlayer().getDisplayName(), event.getMessage());
 			}
 		}
 	}

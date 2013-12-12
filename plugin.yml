@@ -2,7 +2,7 @@ name: BungeeChatClient
 version: 0.3
 author: KoolKrafter
 main: com.jumanjicraft.BungeeChatClient.BungeeChatClient
-depend: [Herochat]
+depend: [Herochat, Vault]
 commands:
   nickname:
     description: Changes a player's nickname.
