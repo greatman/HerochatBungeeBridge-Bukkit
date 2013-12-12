@@ -91,6 +91,43 @@
                 <showDeprecation>true</showDeprecation>
             </configuration>
         </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>2.1</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <minimizeJar>true</minimizeJar>
+                        <artifactSet>
+                            <includes>
+                                <include>redis.clients:jedis</include>
+                                <include>commons-pool:commons-pool</include>
+                                <include>org.apache.commons:commons-lang3</include>
+                            </includes>
+                        </artifactSet>
+                        <relocations>
+                            <relocation>
+                                <pattern>redis.clients.jedis</pattern>
+                                <shadedPattern>com.jumanjicraft.BungeeChatClient.internal.jedis</shadedPattern>
+                            </relocation>
+                            <relocation>
+                                <pattern>redis.clients.util</pattern>
+                                <shadedPattern>com.jumanjicraft.BungeeChatClient.internal.jedisutil</shadedPattern>
+                            </relocation>
+                            <relocation>
+                                <pattern>org.apache.commons</pattern>
+                                <shadedPattern>com.jumanjicraft.BungeeChatClient.internal.commons</shadedPattern>
+                            </relocation>
+                        </relocations>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
     </plugins>
 </build>
 
