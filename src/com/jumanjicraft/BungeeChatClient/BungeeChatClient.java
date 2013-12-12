@@ -44,6 +44,7 @@ public class BungeeChatClient extends JavaPlugin {
     public void sendMessage(String channel, String prefix, String username, String message) {
         Jedis rsc = jedisPool.getResource();
         rsc.publish(CHANNEL_NAME_SEND, getConfig().getString("serverName") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
+        jedisPool.returnResource(rsc);
     }
 
     private class PubSubListener implements Runnable {
