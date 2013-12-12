@@ -11,6 +11,8 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisException;
 
+import java.util.Arrays;
+
 public class BungeeChatClient extends JavaPlugin {
 
     private JedisPool jedisPool;
@@ -68,8 +70,11 @@ public class BungeeChatClient extends JavaPlugin {
     private class JedisPubSubHandler extends JedisPubSub {
         @Override
         public void onMessage(String channel, String message) {
+            System.out.println("CHECKING THE CHANNEL");
             if (channel.equals(CHANNEL_NAME_RECEIVE)) {
+                System.out.println("IT'S THE CHAN");
                 String[] messages = message.split(":", 4);
+                System.out.println("THE ARRAY:" + Arrays.toString(messages));
                 String channelName = messages[0];
                 String rank = messages[1];
                 String nickname = messages[2];
@@ -83,6 +88,7 @@ public class BungeeChatClient extends JavaPlugin {
                     Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
                     return;
                 }
+                System.out.println("SENDING THE MSG");
                 herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
             }
         }
