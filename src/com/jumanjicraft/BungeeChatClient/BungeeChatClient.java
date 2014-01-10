@@ -22,7 +22,7 @@ public class BungeeChatClient extends JavaPlugin {
         saveConfig();
         try {
             client = new MongoClient(getConfig().getString("mongoAddress"));
-            queue = new MongoMessage(client.getDB("messages").getCollection("partymessages"), getConfig().getInt("serverID"));
+            queue = new MongoMessage(client.getDB("messages").getCollection("herochatmessages"), getConfig().getInt("serverID"));
             announcer = new Announcer();
             Bukkit.getScheduler().runTaskAsynchronously(this, announcer);
             Bukkit.getPluginManager().registerEvents(new BungeeListener(this), this);
