@@ -1,2 +1,2 @@
-jedisAddress: 127.0.0.1
-serverName: tbdpvp
+mongoAddress: 127.0.0.1
+serverID: 1

@@ -2,116 +2,83 @@ package com.jumanjicraft.BungeeChatClient;
 
 import com.dthielke.herochat.Channel;
 import com.dthielke.herochat.Herochat;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
-import redis.clients.jedis.exceptions.JedisException;
 
-import java.util.Arrays;
+import java.net.UnknownHostException;
 
 public class BungeeChatClient extends JavaPlugin {
 
-    private JedisPool jedisPool;
     private final String CHANNEL_NAME_SEND = "BungeeChatSend", CHANNEL_NAME_RECEIVE = "BungeeChatReceive";
-    private PubSubListener psl;
+    private MongoClient client;
+    private Announcer announcer;
+    private MongoMessage queue;
 
     public void onEnable() {
         getConfig().options().copyDefaults(true);
         saveConfig();
-        jedisPool = new JedisPool(new JedisPoolConfig(), getConfig().getString("jedisAddress"));
-        if (jedisPool == null) {
-            getLogger().severe("Redis not found! Disabling...");
-            getPluginLoader().disablePlugin(this);
+        try {
+            client = new MongoClient(getConfig().getString("mongoAddress"));
+            queue = new MongoMessage(client.getDB("messages").getCollection("partymessages"), getConfig().getInt("serverID"));
+            announcer = new Announcer();
+            Bukkit.getScheduler().runTaskAsynchronously(this, announcer);
+            Bukkit.getPluginManager().registerEvents(new BungeeListener(this), this);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            getLogger().severe("Unable to connect to MongoDB! Plugin will be crippled in features!");
         }
-        psl = new PubSubListener();
-        Bukkit.getScheduler().runTaskAsynchronously(this, psl);
-        Bukkit.getPluginManager().registerEvents(new BungeeListener(this), this);
     }
 
 
     public void onDisable() {
-        psl.poison();
-    }
-
-    public JedisPool getPool() {
-        return jedisPool;
+       announcer.poison();
     }
 
     public void sendMessage(String channel, String prefix, String username, String message) {
-        Jedis rsc = jedisPool.getResource();
-        rsc.publish(CHANNEL_NAME_SEND, getConfig().getString("serverName") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
-        jedisPool.returnResource(rsc);
+        queue.send(CHANNEL_NAME_SEND, getConfig().getString("serverName") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
     }
 
-    private class PubSubListener implements Runnable {
+    private class Announcer implements Runnable {
 
-        private Jedis rsc;
-        private JedisPubSubHandler jpsh;
+        private boolean end = false;
 
         @Override
         public void run() {
-            try {
-                rsc = jedisPool.getResource();
-                jpsh = new JedisPubSubHandler();
-                rsc.subscribe(jpsh, CHANNEL_NAME_RECEIVE);
-            } catch (JedisException ignored) {
-            }
-        }
+            while (!end) {
+                BasicDBObject message = queue.get();
+                if (message != null) {
+                    System.out.println(message.toString());
+                    queue.ack(message);
+                    if (message.containsField(CHANNEL_NAME_RECEIVE)) {
+                        String[] messages = ((String)message.get(CHANNEL_NAME_RECEIVE)).split(":", 5);
+                        String server = messages[0];
+                        if (!server.equals(getConfig().getString("serverName"))) {
+                            String channelName = messages[1];
+                            String rank = messages[2];
+                            String nickname = messages[3];
+                            String playerMessage = messages[4];
+                            playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
+                            String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
+                            String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
+                            Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
+                            if (herochatChannel == null)
+                            {
+                                Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
+                                return;
+                            }
+                            herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
 
-        public void poison() {
-            jpsh.unsubscribe();
-            jedisPool.returnResource(rsc);
-        }
-    }
-
-    private class JedisPubSubHandler extends JedisPubSub {
-        @Override
-        public void onMessage(String channel, String message) {
-            if (channel.equals(CHANNEL_NAME_RECEIVE)) {
-                String[] messages = message.split(":", 5);
-                String server = messages[0];
-                if (!server.equals(getConfig().getString("serverName"))) {
-                    String channelName = messages[1];
-                    String rank = messages[2];
-                    String nickname = messages[3];
-                    String playerMessage = messages[4];
-                    playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
-                    String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
-                    String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
-                    Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
-                    if (herochatChannel == null)
-                    {
-                        Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
-                        return;
+                        }
                     }
-                    herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
-
                 }
             }
         }
 
-        @Override
-        public void onPMessage(String s, String s2, String s3) {
-        }
-
-        @Override
-        public void onSubscribe(String s, int i) {
-        }
-
-        @Override
-        public void onUnsubscribe(String s, int i) {
-        }
-
-        @Override
-        public void onPUnsubscribe(String s, int i) {
-        }
-
-        @Override
-        public void onPSubscribe(String s, int i) {
+        public void poison() {
+            end = true;
         }
     }
 
