@@ -50,7 +50,6 @@ public class BungeeChatClient extends JavaPlugin {
             while (!end) {
                 BasicDBObject message = queue.get();
                 if (message != null) {
-                    System.out.println(message.toString());
                     queue.ack(message);
                     if (message.containsField(CHANNEL_NAME_RECEIVE)) {
                         String[] messages = ((String)message.get(CHANNEL_NAME_RECEIVE)).split(":", 5);
