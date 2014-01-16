@@ -54,7 +54,7 @@ public class BungeeChatClient extends JavaPlugin {
                     if (message.containsField(CHANNEL_NAME_RECEIVE)) {
                         String[] messages = ((String)message.get(CHANNEL_NAME_RECEIVE)).split(":", 5);
                         String server = messages[0];
-                        if (!server.equals(getConfig().getString("serverName"))) {
+                        if (!server.equals(getConfig().getString("serverID"))) {
                             String channelName = messages[1];
                             String rank = messages[2];
                             String nickname = messages[3];
