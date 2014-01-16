@@ -38,7 +38,7 @@ public class BungeeChatClient extends JavaPlugin {
     }
 
     public void sendMessage(String channel, String prefix, String username, String message) {
-        queue.send(CHANNEL_NAME_SEND, getConfig().getString("serverName") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
+        queue.send(CHANNEL_NAME_SEND, getConfig().getString("serverID") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
     }
 
     private class Announcer implements Runnable {
