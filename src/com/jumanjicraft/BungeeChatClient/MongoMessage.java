@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 
 public class MongoMessage {
-
     private DBCollection collection;
     private int serverID;
     private final DBObject searchQuery;
