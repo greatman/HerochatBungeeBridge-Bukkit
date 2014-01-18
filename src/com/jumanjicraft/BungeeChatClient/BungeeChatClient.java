@@ -34,6 +34,7 @@ public class BungeeChatClient extends JavaPlugin {
 
 
     public void onDisable() {
+       queue.stop();
        announcer.poison();
     }
 

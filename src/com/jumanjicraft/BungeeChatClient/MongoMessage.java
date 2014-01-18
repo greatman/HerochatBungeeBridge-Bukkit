@@ -68,4 +68,11 @@ public class MongoMessage {
     private DBObject getServers() {
         return collection.findOne(new BasicDBObject("serverlist", true));
     }
+
+    public void stop() {
+        BasicDBObject serverList = (BasicDBObject) collection.findOne(new BasicDBObject("serverlist", true));
+        List<Integer> servers = (List<Integer>) serverList.get("servers");
+        servers.remove(serverID);
+        collection.remove(serverList);
+    }
 }
