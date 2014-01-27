@@ -2,6 +2,7 @@ package com.jumanjicraft.BungeeChatClient;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 import java.util.ArrayList;
@@ -74,5 +75,6 @@ public class MongoMessage {
         List<Integer> servers = (List<Integer>) serverList.get("servers");
         servers.remove(serverID);
         collection.remove(serverList);
+        collection.findAndRemove(new BasicDBObject("servers", serverID).append("payload", true));
     }
 }
