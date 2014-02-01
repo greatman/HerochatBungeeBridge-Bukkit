@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +18,8 @@ public class BungeeListener implements Listener {
 	
 	private BungeeChatClient plugin;
 
-    private List<String> antiSpam = new ArrayList<String>();
+    //private List<String> antiSpam = new ArrayList<String>();
+    private Map<String, BukkitTask> antiSpam = new HashMap<String, BukkitTask>();
 	public BungeeListener(BungeeChatClient plugin)
 	{
 		this.plugin = plugin;
@@ -28,24 +30,29 @@ public class BungeeListener implements Listener {
 	{
 		if (event.getResult() == Chatter.Result.ALLOWED)
 		{
-            if (!antiSpam.contains(event.getSender().getName())) {
+            if (!antiSpam.containsKey(event.getSender().getName())) {
                 if (!event.getFormat().equalsIgnoreCase(Herochat.getChannelManager().getConversationFormat()))
                 {
-                    antiSpam.add(event.getSender().getName());
-                    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                           antiSpam.remove(event.getSender().getName());
-                        }
-                    }, 40);
+                    generateTask(event.getSender().getName());
                     plugin.sendMessage(event.getChannel().getName(), Herochat.getChatService().getPlayerPrefix(event.getSender().getPlayer()), event.getSender().getPlayer().getDisplayName(), event.getMessage());
                 }
             } else {
+                antiSpam.get(event.getSender().getName()).cancel();
+                generateTask(event.getSender().getName());
                 event.setResult(Chatter.Result.MUTED);
             }
 
 		}
 	}
+
+    private void generateTask(final String player) {
+        antiSpam.put(player, Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                antiSpam.remove(player);
+            }
+        }, 20));
+    }
 
 
 }
