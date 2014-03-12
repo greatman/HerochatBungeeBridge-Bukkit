@@ -105,12 +105,17 @@
                         <artifactSet>
                             <includes>
                                 <include>org.mongodb:mongo-java-driver</include>
+                                <include>com.rabbitmq:amqp-client</include>
                             </includes>
                         </artifactSet>
                         <relocations>
                             <relocation>
                                 <pattern>com.mongodb</pattern>
                                 <shadedPattern>com.jumanjicraft.BungeeChatClient.internal.com.mongodb</shadedPattern>
+                            </relocation>
+                            <relocation>
+                                <pattern>com.rabbitmq</pattern>
+                                <shadedPattern>com.jumanjicraft.BungeeChatClient.internal.com.rabbitmq</shadedPattern>
                             </relocation>
                         </relocations>
                     </configuration>
