@@ -51,7 +51,7 @@ public class BungeeListener implements Listener {
             public void run() {
                 antiSpam.remove(player);
             }
-        }, 20));
+        }, 10));
     }
 
 

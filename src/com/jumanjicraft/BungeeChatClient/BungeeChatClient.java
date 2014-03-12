@@ -1,45 +1,59 @@
 package com.jumanjicraft.BungeeChatClient;
 
-import com.dthielke.herochat.Channel;
-import com.dthielke.herochat.Herochat;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
+import com.dthielke.herochat.*;
+import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.CacheRequest;
 
 public class BungeeChatClient extends JavaPlugin {
 
     private final String CHANNEL_NAME_SEND = "BungeeChatSend", CHANNEL_NAME_RECEIVE = "BungeeChatReceive";
-    private MongoClient client;
     private Announcer announcer;
-    private MongoMessage queue;
+    private Channel channelSend;
+    private Channel channelReceive;
+    private QueueingConsumer consumer;
+    private Connection connection = null;
 
     public void onEnable() {
         getConfig().options().copyDefaults(true);
         saveConfig();
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(getConfig().getString("amqpServer"));
         try {
-            client = new MongoClient(getConfig().getString("mongoAddress"));
-            queue = new MongoMessage(client.getDB("messages").getCollection("herochatmessages"), getConfig().getInt("serverID"));
-            announcer = new Announcer();
-            Bukkit.getScheduler().runTaskAsynchronously(this, announcer);
-            Bukkit.getPluginManager().registerEvents(new BungeeListener(this), this);
-        } catch (UnknownHostException e) {
+            connection = factory.newConnection();
+            channelSend = connection.createChannel();
+            channelSend.exchangeDeclare(CHANNEL_NAME_SEND, "fanout");
+            channelReceive = factory.newConnection().createChannel();
+            channelReceive.exchangeDeclare(CHANNEL_NAME_RECEIVE, "fanout");
+            String queueName = channelReceive.queueDeclare().getQueue();
+            channelReceive.queueBind(queueName, CHANNEL_NAME_RECEIVE, "");
+            consumer = new QueueingConsumer(channelReceive);
+            channelReceive.basicConsume(queueName, true, consumer);
+        } catch (IOException e) {
             e.printStackTrace();
-            getLogger().severe("Unable to connect to MongoDB! Plugin will be crippled in features!");
         }
     }
 
-
     public void onDisable() {
-       queue.stop();
-       announcer.poison();
+        try {
+            connection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        announcer.poison();
     }
 
     public void sendMessage(String channel, String prefix, String username, String message) {
-        queue.send(CHANNEL_NAME_SEND, getConfig().getInt("serverID") + ":" + channel + ":" + prefix + ":" + username + ":" + message);
+        try {
+            channelSend.basicPublish(CHANNEL_NAME_SEND, "", null, (getConfig().getInt("serverID") + ":" + channel + ":" + prefix + ":" + username + ":" + message).getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private class Announcer implements Runnable {
@@ -49,30 +63,30 @@ public class BungeeChatClient extends JavaPlugin {
         @Override
         public void run() {
             while (!end) {
-                BasicDBObject message = queue.get();
-                if (message != null) {
-                    queue.ack(message);
-                    if (message.containsField(CHANNEL_NAME_RECEIVE)) {
-                        String[] messages = ((String)message.get(CHANNEL_NAME_RECEIVE)).split(":", 5);
-                        String server = messages[0];
-                        if (!server.equals(getConfig().getString("serverID"))) {
-                            String channelName = messages[1];
-                            String rank = messages[2];
-                            String nickname = messages[3];
-                            String playerMessage = messages[4];
-                            playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
-                            String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
-                            String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
-                            Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
-                            if (herochatChannel == null)
-                            {
-                                Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
-                                return;
-                            }
-                            herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
-
+                try {
+                    QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+                    String message = new String(delivery.getBody());
+                    String[] messages = message.split(":", 5);
+                    String server = messages[0];
+                    if (!server.equals(getConfig().getString("serverID"))) {
+                        String channelName = messages[1];
+                        String rank = messages[2];
+                        String nickname = messages[3];
+                        String playerMessage = messages[4];
+                        playerMessage = ChatColor.translateAlternateColorCodes('&', playerMessage);
+                        String rankMessage = ChatColor.translateAlternateColorCodes('&', rank);
+                        String playerNickname = ChatColor.translateAlternateColorCodes('&', nickname);
+                        com.dthielke.herochat.Channel herochatChannel = Herochat.getChannelManager().getChannel(channelName);
+                        if (herochatChannel == null)
+                        {
+                            Bukkit.getLogger().warning("Channel "+channelName+" doesn't exist, but a message was receieved on it. Your Herochat configs aren't probably the same on each server.");
+                            return;
                         }
+                        herochatChannel.sendRawMessage(herochatChannel.getColor() + "[" + herochatChannel.getNick() + "] " + ChatColor.RESET + rankMessage + playerNickname + ChatColor.RESET + ": " + playerMessage);
+
                     }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
