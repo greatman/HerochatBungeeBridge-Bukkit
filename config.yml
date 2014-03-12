@@ -1,2 +1,2 @@
-mongoAddress: 127.0.0.1
+amqpServer: 127.0.0.1
 serverID: 1
