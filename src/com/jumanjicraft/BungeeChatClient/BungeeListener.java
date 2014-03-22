@@ -28,7 +28,7 @@ public class BungeeListener implements Listener {
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onChannelChat(final ChannelChatEvent event)
 	{
-		if (event.getResult() == Chatter.Result.ALLOWED)
+        if (event.getResult() == Chatter.Result.ALLOWED)
 		{
             if (!antiSpam.containsKey(event.getSender().getName())) {
                 if (!event.getFormat().equalsIgnoreCase(Herochat.getChannelManager().getConversationFormat()))

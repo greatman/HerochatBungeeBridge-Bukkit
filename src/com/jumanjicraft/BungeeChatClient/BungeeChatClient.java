@@ -34,9 +34,12 @@ public class BungeeChatClient extends JavaPlugin {
             channelReceive.queueBind(queueName, CHANNEL_NAME_RECEIVE, "");
             consumer = new QueueingConsumer(channelReceive);
             channelReceive.basicConsume(queueName, true, consumer);
+            announcer = new Announcer();
+            getServer().getScheduler().runTaskAsynchronously(this, announcer);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        getServer().getPluginManager().registerEvents(new BungeeListener(this), this);
     }
 
     public void onDisable() {
